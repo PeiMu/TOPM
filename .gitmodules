@@ -1,0 +1,4 @@
+[submodule "isl"]
+	path = isl
+	url = https://github.com/ds1231h/isl.git
+	branch = cmake_0721
