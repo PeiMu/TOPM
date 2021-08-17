@@ -4,5 +4,7 @@ project(TOPM)
 set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(isl)
+include_directories(isl/include)
 
-add_executable(TOPM main.cpp)
+add_executable(TOPM main.cpp isl_dump.cpp test_expr_compute.cpp)
+target_link_libraries(TOPM isl)
