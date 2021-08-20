@@ -51,3 +51,27 @@ void isl_dump(isl_multi_id *multi_id) {
 void isl_dump(isl_multi_aff* multi_aff) {
 	isl_multi_aff_dump(multi_aff);
 }
+
+void isl_dump(isl_local_space* local_space) {
+	isl_local_space_dump(local_space);
+}
+
+void isl_dump(isl_pw_multi_aff* pw_multi_aff) {
+	isl_pw_multi_aff_dump(pw_multi_aff);
+}
+
+void isl_dump(isl_set_list* set_list) {
+	isl_set_list_dump(set_list);
+}
+
+void isl_dump(isl_map* map) {
+	isl_pw_multi_aff_dump(isl_map_as_pw_multi_aff(map));
+}
+
+void isl_dump(isl_union_set* union_set) {
+	isl_union_set_dump(union_set);
+}
+
+void isl_dump(isl_union_pw_multi_aff* union_pw_multi_aff) {
+	isl_union_pw_multi_aff_dump(union_pw_multi_aff);
+}

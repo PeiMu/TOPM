@@ -27,5 +27,11 @@ void isl_dump(isl_id_list* id_list);
 void isl_dump(isl_multi_union_pw_aff *multi_union_pw_aff);
 void isl_dump(isl_multi_id *multi_id);
 void isl_dump(isl_multi_aff* multi_aff);
+void isl_dump(isl_local_space* local_space);
+void isl_dump(isl_pw_multi_aff* pw_multi_aff);
+void isl_dump(isl_set_list* set_list);
+void isl_dump(isl_map* map);
+void isl_dump(isl_union_set* union_set);
+void isl_dump(isl_union_pw_multi_aff* union_pw_multi_aff);
 
 #endif //TOPM_ISL_DUMP_H
