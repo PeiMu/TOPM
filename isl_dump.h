@@ -15,6 +15,7 @@
 #include "isl/union_set.h"
 #include "isl/ast.h"
 
+void isl_dump(isl_basic_set* basic_set);
 void isl_dump(isl_set* set);
 void isl_dump(isl_aff* aff);
 void isl_dump(isl_id* id);

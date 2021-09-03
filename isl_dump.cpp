@@ -4,6 +4,10 @@
 
 #include "isl_dump.h"
 
+void isl_dump(isl_basic_set* basic_set) {
+	isl_basic_set_dump(basic_set);
+}
+
 void isl_dump(isl_set* set) {
 	isl_set_dump(set);
 }
