@@ -4,6 +4,13 @@
 
 #include "barvinok_case.h"
 
+/*
+	for (int i = 1; i <= n; ++i) {
+	    for (int j = 1; j <= i; ++j) {
+	        S
+	    }
+	}
+ */
 static inline void GetSetSpace(isl_ctx* ctx) {
 	auto set = isl_set_read_from_str(ctx, "{[i, j]: 1 <= i <= 5 and 1 <= j <= i}");
 	isl_dump(set);
@@ -22,11 +29,20 @@ static inline void IntersectSet(isl_ctx* ctx) {
 	isl_assert(ctx, is_equal == isl_bool_false, isl_ctx_set_error(ctx, isl_error_abort));
 }
 
+static inline void GetStrideSpace(isl_ctx* ctx) {
+	auto set = isl_set_read_from_str(ctx, "[n] -> { [i] : exists a : 1 <= i <= n and i = 1 + 3 a }");
+	isl_dump(set);
+
+	auto space = isl_set_get_space(set);
+	isl_dump(space);
+}
 
 static inline void SetDomain(isl_ctx* ctx) {
 	GetSetSpace(ctx);
 
 	IntersectSet(ctx);
+
+	GetStrideSpace(ctx);
 }
 
 void BarvinokCase() {
