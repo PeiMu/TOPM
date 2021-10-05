@@ -176,6 +176,11 @@ static inline void SpacesDim(isl_ctx *ctx) {
              isl_ctx_set_error(ctx, isl_error_abort));
 }
 
+isl_stat PrintBasicSet(__isl_take isl_basic_set *bset, void *user) {
+  isl_dump(bset);
+  return isl_stat_ok;
+}
+
 static inline void Sets(isl_ctx* ctx) {
   auto set_space = isl_space_unit(ctx);
   auto id_i = isl_id_alloc(ctx, "id_i", nullptr);
@@ -192,17 +197,44 @@ static inline void Sets(isl_ctx* ctx) {
   set_space = isl_space_set_tuple_name(set_space, isl_dim_set, "S_0");
   isl_dump(set_space);
 
-  isl_dump(isl_basic_set_empty(isl_space_copy(set_space)));
-  isl_dump(isl_set_empty(isl_space_copy(set_space)));
-  isl_dump(isl_union_set_empty_ctx(ctx));
-  isl_dump(isl_union_set_empty(isl_space_copy(set_space)));
+  auto empty_basic_set = isl_basic_set_empty(isl_space_copy(set_space));
+  isl_dump(empty_basic_set);
+  isl_dump(isl_set_from_basic_set(empty_basic_set));
 
-  isl_dump(isl_basic_set_universe(isl_space_copy(set_space)));
+  auto empty_set = isl_set_empty(isl_space_copy(set_space));
+  isl_dump(empty_set);
+  isl_assert(ctx, 0 == isl_set_n_basic_set(empty_set),
+             isl_ctx_set_error(ctx, isl_error_abort));
+
+  auto empty_union_set = isl_union_set_empty(isl_space_copy(set_space));
+  isl_dump(isl_union_set_empty_ctx(ctx));
+  isl_dump(empty_union_set);
+  isl_assert(ctx, 0 == isl_union_set_n_set(empty_union_set),
+             isl_ctx_set_error(ctx, isl_error_abort));
+
+  auto universe_basic_set = isl_basic_set_universe(isl_space_copy(set_space));
+  isl_dump(universe_basic_set);
   isl_dump(isl_set_universe(isl_space_copy(set_space)));
 
-  isl_dump(isl_union_set_universe(isl_union_set_empty(isl_space_copy(set_space))));
+  auto universe_set = isl_set_universe(isl_space_copy(set_space));
+  isl_dump(universe_set);
+  isl_assert(ctx, 1 == isl_set_n_basic_set(universe_set),
+             isl_ctx_set_error(ctx, isl_error_abort));
+  isl_set_foreach_basic_set(universe_set, PrintBasicSet, nullptr);
+
+  auto bset_list = isl_set_get_basic_set_list(universe_set);
+  isl_dump(bset_list);
+
+  auto universe_union_set = isl_union_set_universe(isl_union_set_empty(isl_space_copy(set_space)));
+  isl_dump(universe_union_set);
+  isl_assert(ctx, 0 == isl_union_set_n_set(universe_union_set),
+             isl_ctx_set_error(ctx, isl_error_abort));
+
   isl_dump(isl_basic_set_nat_universe(isl_space_copy(set_space)));
   isl_dump(isl_set_nat_universe(isl_space_copy(set_space)));
+
+  // lexico
+  isl_dump(isl_map_lex_lt(isl_space_copy(set_space)));
 }
 
 static inline void Maps(isl_ctx* ctx) {
@@ -219,10 +251,144 @@ static inline void Maps(isl_ctx* ctx) {
   map_space = isl_space_set_tuple_name(map_space, isl_dim_out, "Var_0");
   isl_dump(map_space);
 
+  isl_dump(isl_basic_map_empty(isl_space_copy(map_space)));
+  isl_dump(isl_map_from_basic_map(isl_basic_map_empty(isl_space_copy(map_space))));
+  isl_dump(isl_map_empty(isl_space_copy(map_space)));
   isl_dump(isl_union_map_empty_ctx(ctx));
   isl_dump(isl_union_map_empty(isl_space_copy(map_space)));
 
+  isl_dump(isl_basic_map_universe(isl_space_copy(map_space)));
+  isl_dump(isl_map_universe(isl_space_copy(map_space)));
   isl_dump(isl_union_map_universe(isl_union_map_empty(isl_space_copy(map_space))));
+
+  isl_dump(isl_basic_map_nat_universe(isl_space_copy(map_space)));
+  isl_dump(isl_map_nat_universe(isl_space_copy(map_space)));
+
+  // identity
+  isl_dump(isl_basic_map_identity(isl_space_copy(map_space)));
+  isl_dump(isl_map_identity(isl_space_copy(map_space)));
+
+  // lexico
+  isl_dump(isl_map_lex_lt_first(isl_space_copy(map_space), 0));
+}
+
+// low level approach
+// create a set containing the even integers between 10 and 42
+void SetConstraint1(isl_ctx* ctx) {
+  auto space = isl_space_set_alloc(ctx, 0, 2);
+  isl_dump(space);
+  auto bset = isl_basic_set_universe(isl_space_copy(space));
+  isl_dump(bset);
+  auto ls = isl_local_space_from_space(space);
+  isl_dump(ls);
+
+  // even number constraint, 2i1 = i0
+  auto c = isl_constraint_alloc_equality(isl_local_space_copy(ls));
+  isl_dump(c);
+  c = isl_constraint_set_coefficient_si(c, isl_dim_set, 0, -1);
+  isl_dump(c);
+  c = isl_constraint_set_coefficient_si(c, isl_dim_set, 1, 2);
+  isl_dump(c);
+  bset = isl_basic_set_add_constraint(bset, c);
+  isl_dump(bset);
+
+  // i0 >= 10
+  c = isl_constraint_alloc_inequality(isl_local_space_copy(ls));
+  isl_dump(c);
+  c = isl_constraint_set_constant_si(c, -10);
+  isl_dump(c);
+  c = isl_constraint_set_coefficient_si(c, isl_dim_set, 0, 1);
+  isl_dump(c);
+  bset = isl_basic_set_add_constraint(bset, c);
+  isl_dump(bset);
+
+  // i0 <=42
+  c = isl_constraint_alloc_inequality(isl_local_space_copy(ls));
+  c = isl_constraint_set_constant_si(c, 42);
+  isl_dump(c);
+  c = isl_constraint_set_coefficient_si(c, isl_dim_set, 0, -1);
+  isl_dump(c);
+  bset = isl_basic_set_add_constraint(bset, c);
+  isl_dump(bset);
+
+  bset = isl_basic_set_project_out(bset, isl_dim_set, 1, 1);
+  isl_dump(bset);
+}
+
+isl_stat PrintConstraint(__isl_take isl_constraint* cst, void *user) {
+  isl_dump(cst);
+  isl_dump(isl_constraint_get_constant_val(cst));
+  isl_dump(isl_constraint_get_coefficient_val(cst, isl_dim_set, 0));
+  isl_dump(isl_constraint_get_div(cst, 0));
+  return isl_stat_ok;
+}
+
+// affine expressions
+// create a set containing the even integers between 10 and 42
+void SetConstraint2(isl_ctx* ctx) {
+  auto space = isl_space_unit(ctx);
+  space = isl_space_add_dims(space, isl_dim_set, 1);
+  isl_dump(space);
+
+  auto ma = isl_multi_aff_identity_on_domain_space(isl_space_copy(space));
+  isl_dump(ma);
+
+  auto var = isl_multi_aff_get_at(ma, 0);
+  isl_dump(var);
+
+  // i0 >= 10
+  auto v = isl_val_int_from_si(ctx, 10);
+  auto cst = isl_aff_val_on_domain_space(isl_space_copy(space), v);
+  auto bset = isl_aff_ge_basic_set(isl_aff_copy(var), cst);
+  isl_dump(bset);
+
+  // i0 >= 10 and i0 <= 42
+  v = isl_val_int_from_si(ctx, 42);
+  cst = isl_aff_val_on_domain_space(space, v);
+  bset = isl_basic_set_intersect(bset, isl_aff_le_basic_set(var, cst));
+  isl_dump(bset);
+
+  // even number and i0 >= 10 and i0 <= 42
+  auto two = isl_val_int_from_si(ctx, 2);
+  ma = isl_multi_aff_scale_val(ma, isl_val_copy(two));
+  bset = isl_basic_set_preimage_multi_aff(bset, isl_multi_aff_copy(ma));
+  ma = isl_multi_aff_scale_down_val(ma, isl_val_copy(two));
+  ma = isl_multi_aff_scale_down_val(ma, two);
+  bset = isl_basic_set_preimage_multi_aff(bset, ma);
+  isl_dump(bset);
+
+  isl_dump(isl_basic_set_remove_divs(isl_basic_set_copy(bset)));
+  isl_dump(isl_basic_set_remove_divs_involving_dims(isl_basic_set_copy(bset), isl_dim_set, 0, 1));
+
+  isl_assert(ctx, 3 == isl_basic_set_n_constraint(bset),
+             isl_ctx_set_error(ctx, isl_error_abort));
+
+  isl_basic_set_foreach_constraint(bset, PrintConstraint, nullptr);
+
+  auto constraint_list = isl_basic_set_get_constraint_list(bset);
+  isl_assert(ctx, isl_bool_true ==
+                  isl_constraint_is_equality(
+                          isl_constraint_list_get_constraint(constraint_list, 0)),
+             isl_ctx_set_error(ctx, isl_error_abort));
+  isl_assert(ctx, isl_bool_false ==
+                  isl_constraint_is_equality(
+                          isl_constraint_list_get_constraint(constraint_list, 1)),
+             isl_ctx_set_error(ctx, isl_error_abort));
+  isl_assert(ctx, isl_bool_true ==
+                  isl_constraint_is_lower_bound(
+                          isl_constraint_list_get_constraint(constraint_list, 1),
+                          isl_dim_set, 0),
+             isl_ctx_set_error(ctx, isl_error_abort));
+  isl_assert(ctx, isl_bool_true ==
+                  isl_constraint_is_upper_bound(
+                          isl_constraint_list_get_constraint(constraint_list, 2),
+                          isl_dim_set, 0),
+             isl_ctx_set_error(ctx, isl_error_abort));
+
+  isl_dump(isl_basic_set_equalities_matrix(
+          bset, isl_dim_cst, isl_dim_param, isl_dim_set, isl_dim_div));
+  isl_dump(isl_basic_set_inequalities_matrix(
+          bset, isl_dim_div, isl_dim_set, isl_dim_param, isl_dim_cst));
 }
 
 void ManualCase() {
@@ -235,6 +401,9 @@ void ManualCase() {
 //  UnnamedParamSpaces(ctx);
 //  SpacesDim(ctx);
 
-  Sets(ctx);
-  Maps(ctx);
+//  Sets(ctx);
+//  Maps(ctx);
+
+//  SetConstraint1(ctx);
+  SetConstraint2(ctx);
 }
